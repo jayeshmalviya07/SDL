@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { downloadDailyEntryReport, getWishMasterDetailedReport } from "../../services/reportService";
+import { downloadPdfReport, downloadExcelReport, getWishMasterDetailedReport } from "../../services/reportService";
 import { formatCurrency, formatDate } from "../../utils/formatHelper";
 
 const UniversalReports = () => {
@@ -34,7 +34,11 @@ const UniversalReports = () => {
     setError("");
     setLoading(type);
     try {
-      await downloadDailyEntryReport(type, startDate, endDate);
+      if (type === "pdf") {
+        await downloadPdfReport(startDate, endDate, reportData);
+      } else {
+        await downloadExcelReport(startDate, endDate, reportData);
+      }
     } catch (err) {
       setError(err.message || "Download failed");
     } finally {
