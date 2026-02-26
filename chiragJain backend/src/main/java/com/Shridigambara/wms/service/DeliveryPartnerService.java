@@ -18,6 +18,8 @@ public interface DeliveryPartnerService {
 
     List<DeliveryPartnerResponseDto> getByHubAdminId(Long hubAdminId);
 
+    List<DeliveryPartnerResponseDto> searchByHubAdminIdAndEmployeeId(Long hubAdminId, String employeeId);
+
     List<DeliveryPartnerResponseDto> getByHubId(Long hubId);
 
     List<DeliveryPartnerResponseDto> getPendingRegistrations();

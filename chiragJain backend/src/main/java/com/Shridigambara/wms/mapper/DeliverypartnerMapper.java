@@ -5,6 +5,12 @@ import com.Shridigambara.wms.responsedto.DeliveryPartnerResponseDto;
 
 public class DeliverypartnerMapper {
     public static DeliveryPartnerResponseDto toResponse(DeliveryPartner entity) {
+        String photoUrl = entity.getDocuments() != null ? entity.getDocuments().stream()
+                .filter(doc -> com.Shridigambara.wms.entities.DocumentType.PHOTO.equals(doc.getDocumentType()))
+                .map(doc -> "/api/files/download/" + doc.getFileUrl())
+                .findFirst()
+                .orElse(null) : null;
+
         return DeliveryPartnerResponseDto.builder()
                 .id(entity.getId())
                 .employeeId(entity.getEmployeeId())
@@ -17,6 +23,7 @@ public class DeliverypartnerMapper {
                 .approvalStatus(entity.getApprovalStatus())
                 .hubAdminId(entity.getHubAdmin() != null ? entity.getHubAdmin().getId() : null)
                 .hubName(entity.getHubAdmin() != null ? entity.getHubAdmin().getHub().getName() : null)
+                .profilePhotoUrl(photoUrl)
                 .build();
     }
 }

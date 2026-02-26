@@ -130,12 +130,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         otpTrackerRepository.save(tracker);
-
-        // Mock email sending: print to console
-        System.out.println("=================================================");
-        System.out.println("MOCK EMAIL OTP DELIVERED FOR: " + identifier);
-        System.out.println("OTP CODE: " + otp);
-        System.out.println("=================================================");
     }
 
     @Override

@@ -47,12 +47,17 @@ public class DeliveryPartner {
     @Builder.Default
     private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
 
+    @OneToMany(mappedBy = "wishMaster", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Builder.Default
+    private java.util.List<WishMasterDocument> documents = new java.util.ArrayList<>();
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
     /**
-     * For payment calculation use approvedRate. Returns approvedRate if set, else proposedRate for display.
+     * For payment calculation use approvedRate. Returns approvedRate if set, else
+     * proposedRate for display.
      */
     public Double getEffectiveRate() {
         return approvedRate != null ? approvedRate : proposedRate;

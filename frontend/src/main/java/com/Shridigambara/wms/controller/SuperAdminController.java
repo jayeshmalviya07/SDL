@@ -33,9 +33,6 @@ public class SuperAdminController {
             @RequestPart(required = false) MultipartFile policeVerification,
             @RequestPart(required = false) MultipartFile agreement,
             @RequestPart(required = false) MultipartFile panCard) {
-        System.out.println(">>> CONTROLLER HIT <<<");
-        System.out.println("EMAIL: " + request.getEmail());
-        System.out.println("USERNAME: " + request.getUsername());
 
         return ResponseEntity.ok(
                 hubAdminService.createHubAdmin(request));

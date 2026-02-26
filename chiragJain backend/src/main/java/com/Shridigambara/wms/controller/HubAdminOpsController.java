@@ -58,18 +58,21 @@ public class HubAdminOpsController {
     }
 
     /**
+     * Search wish masters registered under this hub admin by employee ID
+     */
+    @GetMapping("/wishmasters/search")
+    public ResponseEntity<List<DeliveryPartnerResponseDto>> getWishMastersByEmployeeId(
+            @RequestParam String employeeId) {
+        Long hubAdminId = getHubAdminIdFromContext();
+        return ResponseEntity.ok(deliveryPartnerService.searchByHubAdminIdAndEmployeeId(hubAdminId, employeeId));
+    }
+
+    /**
      * Register a new wish master (hub admin flow)
      */
     @PostMapping("/create-wishmaster")
     public ResponseEntity<DeliveryPartnerResponseDto> createWishMaster(
             @RequestBody WishMasterRegistrationRequestDto request) {
-        System.out.println(">>> CREATE WISHMASTER HIT <<<");
-        System.out.println("employeeId: " + request.getEmployeeId());
-        System.out.println("name: " + request.getName());
-        System.out.println("phone: " + request.getPhone());
-        System.out.println("password: " + (request.getPassword() != null ? "SET" : "NULL"));
-        System.out.println("proposedRate: " + request.getProposedRate());
-        System.out.println("vehicleNumber: " + request.getVehicleNumber());
         Long hubAdminId = getHubAdminIdFromContext();
         return ResponseEntity.ok(deliveryPartnerService.registerWishMaster(hubAdminId, request));
     }

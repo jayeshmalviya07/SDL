@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,10 +67,22 @@ public class DeliveryPerformanceController {
     }
 
     @DeleteMapping("/wish-master/{wishMasterId}/month")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_HUB_ADMIN')")
     public ResponseEntity<String> deleteByMonthForWishMaster(
             @PathVariable Long wishMasterId,
             @RequestParam int year,
             @RequestParam int month) {
+
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
+            if ("HUB_ADMIN".equals(principal.getRole())) {
+                Long hubAdminId = principal.getEntityId();
+                if (!service.isWishMasterUnderHubAdmin(wishMasterId, hubAdminId)) {
+                    return ResponseEntity.status(403).body("Unauthorized to delete data for this Wish Master");
+                }
+            }
+        }
+
         service.deleteByMonth(wishMasterId, year, month);
         return ResponseEntity.ok("Deleted entries for " + year + "-" + String.format("%02d", month));
     }

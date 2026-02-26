@@ -198,4 +198,11 @@ public class DeliveryPerformanceServiceImpl implements DeliveryPerformanceServic
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
         performanceRepository.deleteByWishMaster_IdAndDeliveryDateBetween(wishMasterId, start, end);
     }
+
+    @Override
+    public boolean isWishMasterUnderHubAdmin(Long wishMasterId, Long hubAdminId) {
+        return partnerRepository.findById(wishMasterId)
+                .map(p -> p.getHubAdmin() != null && p.getHubAdmin().getId().equals(hubAdminId))
+                .orElse(false);
+    }
 }

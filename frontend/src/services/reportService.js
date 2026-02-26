@@ -19,6 +19,22 @@ export const downloadReport = async (start, end) => {
   window.URL.revokeObjectURL(url);
 };
 
+
+
+
+/**
+ * Hub Admin: Get detailed report data (JSON) for a specific wish master
+ */
+export const getHubWishMasterDetailedReport = async (wmId, startDate, endDate) => {
+  const token = localStorage.getItem("token");
+  const url = `${API_BASE}/reports/hub-admin/wish-masters/${wmId}/detailed?startDate=${startDate}&endDate=${endDate}`;
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) throw new Error("Failed to fetch Hub Admin detailed report");
+  return response.json();
+};
+
 /**
  * Wish Master: Get detailed report data (JSON) for on-screen display
  */

@@ -13,5 +13,7 @@ public interface DeliveryPartnerRepository extends JpaRepository<DeliveryPartner
 
     List<DeliveryPartner> findByHubAdminId(Long hubAdminId);
 
+    List<DeliveryPartner> findByHubAdminIdAndEmployeeIdContainingIgnoreCase(Long hubAdminId, String employeeId);
+
     List<DeliveryPartner> findByHubAdmin_Hub_Id(Long hubId);
 }

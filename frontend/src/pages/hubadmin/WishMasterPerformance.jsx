@@ -1,118 +1,301 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/axiosInstance";
+import { downloadPdfReport, downloadExcelReport, getHubWishMasterDetailedReport } from "../../services/reportService";
+import { formatCurrency, formatDate } from "../../utils/formatHelper";
 
 const HubWishMasterPerformance = () => {
     const { wmId } = useParams();
     const navigate = useNavigate();
 
     const [wishMaster, setWishMaster] = useState(null);
-    const [performance, setPerformance] = useState([]);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(null);
+    const [error, setError] = useState("");
+    const [deleteMonth, setDeleteMonth] = useState("");
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [wmRes, perfRes] = await Promise.all([
-                    axiosInstance.get(`/hubadmin/wishmasters/${wmId}`),
-                    axiosInstance.get(`/performance/wish-master/${wmId}`),
-                ]);
-                setWishMaster(wmRes.data);
-                const data = perfRes.data?.data || perfRes.data || [];
-                setPerformance(Array.isArray(data) ? data : []);
-            } catch (err) {
-                console.error("Error fetching performance:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+        fetchInitialData();
     }, [wmId]);
 
-    const thClass = "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider";
-    const tdClass = "px-6 py-4 whitespace-nowrap text-sm";
+    const fetchInitialData = async () => {
+        try {
+            setLoading(true);
+            const wmRes = await axiosInstance.get(`/hubadmin/wishmasters/${wmId}`);
+            setWishMaster(wmRes.data);
+
+            // Default range: last 30 days
+            const end = new Date().toISOString().split("T")[0];
+            const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+            setStartDate(start);
+            setEndDate(end);
+
+            await fetchReport(start, end);
+        } catch (err) {
+            console.error("Error fetching initial data:", err);
+            setError("Failed to load wish master details");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchReport = async (start = startDate, end = endDate) => {
+        if (!start || !end) {
+            setError("Please select both start and end dates");
+            return;
+        }
+        if (start > end) {
+            setError("Start date cannot be after end date");
+            return;
+        }
+        setError("");
+        setActionLoading("view");
+        try {
+            const data = await getHubWishMasterDetailedReport(wmId, start, end);
+            setReportData(data);
+        } catch (err) {
+            setError(err.message || "Failed to fetch report data");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDownload = async (type) => {
+        if (!startDate || !endDate) {
+            setError("Please select both start and end dates");
+            return;
+        }
+        if (startDate > endDate) {
+            setError("Start date cannot be after end date");
+            return;
+        }
+        setError("");
+        setActionLoading(type);
+        try {
+            if (type === "pdf") {
+                await downloadPdfReport(startDate, endDate, reportData);
+            } else {
+                await downloadExcelReport(startDate, endDate, reportData);
+            }
+        } catch (err) {
+            setError(err.message || "Download failed");
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDeleteByMonth = async () => {
+        if (!deleteMonth) {
+            setError("Please select a month first");
+            return;
+        }
+        const [year, month] = deleteMonth.split("-").map(Number);
+        const monthName = new Date(year, month - 1).toLocaleString("default", { month: "long", year: "numeric" });
+
+        if (!window.confirm(`⚠️ Are you sure you want to delete ALL entries for ${monthName}?\n\nThis action cannot be undone!`)) return;
+
+        try {
+            setDeleting(true);
+            setError("");
+            await axiosInstance.delete(`/performance/wish-master/${wmId}/month?year=${year}&month=${month}`);
+            alert(`Deleted entries for ${monthName}`);
+            setDeleteMonth("");
+            fetchInitialData();
+        } catch (err) {
+            console.error("Delete error:", err);
+            setError(err.response?.data || "Failed to delete entries");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 px-4 sm:px-6 lg:px-10 py-8">
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Header */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm flex items-center gap-4">
-                    <button
-                        onClick={() => navigate("/WishMasterList")}
-                        className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Back to Wish Masters
-                    </button>
-                    <div className="border-l border-gray-200 pl-4">
-                        <h1 className="text-2xl font-bold text-gray-800">
-                            Daily Performance — <span className="text-indigo-600">
-                                {wishMaster?.name || `Wish Master #${wmId}`}
-                            </span>
-                        </h1>
-                        {wishMaster?.employeeId && (
-                            <p className="text-sm text-gray-500 mt-0.5">Emp ID: {wishMaster.employeeId}</p>
-                        )}
+                <div className="bg-white p-6 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate("/WishMasterList")}
+                            className="p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-800">
+                                <span className="text-indigo-600">{wishMaster?.name}</span>'s Performance
+                            </h1>
+                            <p className="text-sm text-gray-500">Employee ID: {wishMaster?.employeeId}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="date"
+                                className="border p-2 rounded-xl text-sm"
+                                value={startDate}
+                                max={new Date().toISOString().split("T")[0]}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                            <span className="text-gray-400">to</span>
+                            <input
+                                type="date"
+                                className="border p-2 rounded-xl text-sm"
+                                value={endDate}
+                                max={new Date().toISOString().split("T")[0]}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </div>
+                        <button
+                            onClick={() => fetchReport()}
+                            disabled={actionLoading !== null}
+                            className="bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all font-medium"
+                        >
+                            {actionLoading === "view" ? "Loading..." : "Update View"}
+                        </button>
                     </div>
                 </div>
 
-                {/* Performance Table */}
-                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800">Daily Entries</h2>
-                            <p className="text-sm text-gray-400 mt-0.5">All recorded daily performance data</p>
+                {error && (
+                    <div className="bg-red-50 text-red-600 p-4 rounded-2xl border border-red-100 text-sm">
+                        {error}
+                    </div>
+                )}
+
+                {/* Summary Cards */}
+                {reportData && (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="bg-white p-5 rounded-3xl shadow-md border border-blue-50">
+                            <p className="text-xs font-semibold text-blue-500 uppercase tracking-wider mb-2">Total Taken</p>
+                            <p className="text-3xl font-bold text-gray-800">{reportData.grandTotal?.totalParcelsReceived || 0}</p>
                         </div>
-                        <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">
-                            {performance.length} records
-                        </span>
+                        <div className="bg-white p-5 rounded-3xl shadow-md border border-emerald-50">
+                            <p className="text-xs font-semibold text-emerald-500 uppercase tracking-wider mb-2">Delivered</p>
+                            <p className="text-3xl font-bold text-gray-800">{reportData.grandTotal?.totalParcelsDelivered || 0}</p>
+                        </div>
+                        <div className="bg-white p-5 rounded-3xl shadow-md border border-red-50">
+                            <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">Failed</p>
+                            <p className="text-3xl font-bold text-gray-800">{reportData.grandTotal?.totalParcelsFailed || 0}</p>
+                        </div>
+                        <div className="bg-white p-5 rounded-3xl shadow-md border border-amber-50">
+                            <p className="text-xs font-semibold text-amber-500 uppercase tracking-wider mb-2">Returned</p>
+                            <p className="text-3xl font-bold text-gray-800">{reportData.grandTotal?.totalParcelsReturned || 0}</p>
+                        </div>
+                        <div className="bg-white p-5 rounded-3xl shadow-md border border-indigo-50">
+                            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Total Earnings</p>
+                            <p className="text-3xl font-bold text-gray-800">{formatCurrency(reportData.grandTotal?.totalAmount)}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Performance Table */}
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                    <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800">Daily Performance List</h2>
+                            <p className="text-sm text-gray-400">Detailed breakdown of tasks </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="month"
+                                value={deleteMonth}
+                                onChange={(e) => setDeleteMonth(e.target.value)}
+                                className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 outline-none"
+                            />
+                            <button
+                                onClick={handleDeleteByMonth}
+                                disabled={deleting || !deleteMonth}
+                                className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white text-sm px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2 shadow-sm"
+                            >
+                                🗑️ {deleting ? "Deleting..." : "Delete Month"}
+                            </button>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => handleDownload("pdf")}
+                                disabled={actionLoading !== null}
+                                className="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black transition-all flex items-center gap-2"
+                            >
+                                {actionLoading === "pdf" ? "Preparing..." : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        PDF
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => handleDownload("excel")}
+                                disabled={actionLoading !== null}
+                                className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 transition-all flex items-center gap-2"
+                            >
+                                {actionLoading === "excel" ? "Preparing..." : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Excel
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
-                    {loading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-                        </div>
-                    ) : performance.length === 0 ? (
-                        <div className="text-center py-16 text-gray-500">
-                            <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            <p className="font-medium text-gray-600">No performance records found.</p>
-                            <p className="text-sm text-gray-400 mt-1">No daily entries have been submitted yet.</p>
-                        </div>
-                    ) : (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className={thClass}>#</th>
-                                    <th className={thClass}>Date</th>
-                                    <th className={thClass}>Taken</th>
-                                    <th className={thClass}>Delivered</th>
-                                    <th className={thClass}>Failed</th>
-                                    <th className={thClass}>Returned</th>
-                                    <th className={thClass}>Amount (₹)</th>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="px-8 py-4 text-center w-16">#</th>
+                                    <th className="px-8 py-4">Date</th>
+                                    <th className="px-8 py-4 text-center">Taken</th>
+                                    <th className="px-8 py-4 text-center">Delivered</th>
+                                    <th className="px-8 py-4 text-center">Failed</th>
+                                    <th className="px-8 py-4 text-center">Returned</th>
+                                    <th className="px-8 py-4 text-right">Earning</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {performance.map((p, index) => (
-                                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className={`${tdClass} text-gray-400 font-mono`}>{index + 1}</td>
-                                        <td className={`${tdClass} font-medium text-gray-800`}>{p.deliveryDate}</td>
-                                        <td className={`${tdClass} text-gray-600`}>{p.parcelsTaken}</td>
-                                        <td className={`${tdClass} text-green-600 font-semibold`}>{p.parcelsDelivered}</td>
-                                        <td className={`${tdClass} text-red-500`}>{p.parcelsFailed}</td>
-                                        <td className={`${tdClass} text-yellow-600`}>{p.parcelsReturned ?? "—"}</td>
-                                        <td className={`${tdClass} text-indigo-600 font-semibold`}>
-                                            ₹{p.finalAmount ?? p.calculatedAmount ?? "—"}
+                            <tbody className="divide-y divide-gray-100">
+                                {reportData?.dailyPerformances?.length > 0 ? (
+                                    reportData.dailyPerformances.map((p, index) => (
+                                        <tr key={p.date} className="hover:bg-indigo-50/30 transition-colors group">
+                                            <td className="px-8 py-5 text-center text-gray-400 text-sm font-mono">{index + 1}</td>
+                                            <td className="px-8 py-5 font-medium text-gray-800">{formatDate(p.date)}</td>
+                                            <td className="px-8 py-5 text-center font-medium text-blue-600 bg-blue-50/30 group-hover:bg-transparent">{p.parcelsReceived}</td>
+                                            <td className="px-8 py-5 text-center font-bold text-emerald-600 bg-emerald-50/30 group-hover:bg-transparent">{p.parcelsDelivered}</td>
+                                            <td className="px-8 py-5 text-center font-medium text-red-500 bg-red-50/30 group-hover:bg-transparent">{p.parcelsFailed}</td>
+                                            <td className="px-8 py-5 text-center font-medium text-amber-600 bg-amber-50/30 group-hover:bg-transparent">{p.parcelsReturned}</td>
+                                            <td className="px-8 py-5 text-right font-bold text-indigo-600 bg-indigo-50/30 group-hover:bg-transparent">
+                                                {formatCurrency(p.amount)}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="7" className="px-8 py-20 text-center text-gray-400 italic">
+                                            No performance entries found for selected date range.
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
-                    )}
+                    </div>
                 </div>
 
             </div>

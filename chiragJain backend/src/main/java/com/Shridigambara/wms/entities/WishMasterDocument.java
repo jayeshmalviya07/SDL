@@ -21,7 +21,7 @@ public class WishMasterDocument {
     private DeliveryPartner wishMaster;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "document_type", nullable = false)
+    @Column(name = "document_type", nullable = false, length = 50)
     private DocumentType documentType;
 
     @Column(name = "file_url", nullable = false)

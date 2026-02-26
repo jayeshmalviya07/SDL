@@ -63,13 +63,6 @@ public class HubAdminOpsController {
     @PostMapping("/create-wishmaster")
     public ResponseEntity<DeliveryPartnerResponseDto> createWishMaster(
             @RequestBody WishMasterRegistrationRequestDto request) {
-        System.out.println(">>> CREATE WISHMASTER HIT <<<");
-        System.out.println("employeeId: " + request.getEmployeeId());
-        System.out.println("name: " + request.getName());
-        System.out.println("phone: " + request.getPhone());
-        System.out.println("password: " + (request.getPassword() != null ? "SET" : "NULL"));
-        System.out.println("proposedRate: " + request.getProposedRate());
-        System.out.println("vehicleNumber: " + request.getVehicleNumber());
         Long hubAdminId = getHubAdminIdFromContext();
         return ResponseEntity.ok(deliveryPartnerService.registerWishMaster(hubAdminId, request));
     }

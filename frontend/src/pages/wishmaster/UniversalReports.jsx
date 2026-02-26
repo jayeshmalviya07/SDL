@@ -14,6 +14,10 @@ const UniversalReports = () => {
       setError("Please select both start and end dates");
       return;
     }
+    if (startDate > endDate) {
+      setError("Start date cannot be after end date");
+      return;
+    }
     setError("");
     setLoading("view");
     try {
@@ -29,6 +33,10 @@ const UniversalReports = () => {
   const generateReport = async (type) => {
     if (!startDate || !endDate) {
       setError("Please select both start and end dates");
+      return;
+    }
+    if (startDate > endDate) {
+      setError("Start date cannot be after end date");
       return;
     }
     setError("");
@@ -68,6 +76,7 @@ const UniversalReports = () => {
               type="date"
               className="w-full border p-3 rounded-xl"
               value={startDate}
+              max={new Date().toISOString().split("T")[0]}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
@@ -78,6 +87,7 @@ const UniversalReports = () => {
               type="date"
               className="w-full border p-3 rounded-xl"
               value={endDate}
+              max={new Date().toISOString().split("T")[0]}
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>

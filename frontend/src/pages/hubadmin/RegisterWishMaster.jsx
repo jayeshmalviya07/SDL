@@ -31,6 +31,8 @@ const RegisterWishMaster = () => {
     rate: "",
   });
 
+  const [uploading, setUploading] = useState(false);
+
   // ✅ Age Validation (18+ Proper Check)
   const isAdult = (dob) => {
     const birthDate = new Date(dob);
@@ -120,66 +122,85 @@ const RegisterWishMaster = () => {
 
   const prevStep = () => setStep(step - 1);
 
+  const uploadFile = async (file) => {
+    if (!file) return null;
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+    const res = await axiosInstance.post("/upload/document", uploadData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data.fileUrl; // "documents/uuid.ext"
+  };
+
   const handleSubmit = async () => {
     if (!validateStep()) return;
 
-    // Build JSON payload matching WishMasterRegistrationRequestDto
-    const payload = {
-      employeeId: formData.username,        // frontend "username" maps to backend "employeeId"
-      name: formData.name || "",
-      phone: formData.phone || "",
-      address: formData.permanentAddress || "",
-      vehicleNumber: formData.vehicleNumber || "",
-      proposedRate: parseFloat(formData.rate),  // frontend "rate" maps to backend "proposedRate"
-      password: formData.password,
-    };
-
     try {
-      await axiosInstance.post("/hubadmin/create-wishmaster", payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+      setUploading(true);
 
-      alert("Approval request sent to Super Admin 🚀");
+      // 1. Upload all files
+      const documentMap = {};
+      const fileMappings = {
+        profilePhoto: "PHOTO",
+        dl: "DRIVING_LICENSE",
+        aadhar: "AADHAAR",
+        panCard: "PAN",
+        policeVerification: "POLICE_VERIFICATION",
+        agreement: "AGREEMENT",
+        bikeRegistration: "BIKE_REGISTRATION",
+      };
 
+      for (const [key, backendEnum] of Object.entries(fileMappings)) {
+        if (formData[key]) {
+          const fileUrl = await uploadFile(formData[key]);
+          if (fileUrl) documentMap[backendEnum] = fileUrl;
+        }
+      }
+
+      // 2. Build JSON payload matching WishMasterRegistrationRequestDto
+      const payload = {
+        employeeId: formData.username,
+        name: formData.name || "",
+        phone: formData.phone || "",
+        address: formData.permanentAddress || "",
+        vehicleNumber: formData.vehicleNumber || "",
+        proposedRate: parseFloat(formData.rate),
+        password: formData.password,
+        documents: documentMap
+      };
+
+      // 3. Create Wish Master
+      await axiosInstance.post("/hubadmin/create-wishmaster", payload);
+
+      alert("Approval request sent to Super Admin with all documents! 🚀");
+
+      // Reset form
       setStep(1);
       setFormData({
-        name: "",
-        dob: "",
-        email: "",
-        phone: "",
-        permanentAddress: "",
-        city: "",
-        state: "",
-        country: "",
-        profilePhoto: null,
-        dl: null,
-        aadhar: null,
-        panCard: null,
-        policeVerification: null,
-        agreement: null,
-        bikeRegistration: null,
-        username: "",
-        password: "",
-        confirmPassword: "",
-        vehicleNumber: "",
-        rate: "",
+        name: "", dob: "", email: "", phone: "", permanentAddress: "",
+        city: "", state: "", country: "", profilePhoto: null,
+        dl: null, aadhar: null, panCard: null, policeVerification: null,
+        agreement: null, bikeRegistration: null,
+        username: "", password: "", confirmPassword: "",
+        vehicleNumber: "", rate: "",
       });
       setPreview(null);
     } catch (error) {
       console.error("Registration error:", error.response?.data || error.message);
       const data = error.response?.data;
       if (data && typeof data === "object" && !data.message) {
-        // Validation errors come as {field: "error message"} map
         const msgs = Object.entries(data).map(([k, v]) => `${k}: ${v}`).join("\n");
         alert("Validation errors:\n" + msgs);
       } else {
         alert(data?.error || data?.message || "Error submitting request");
       }
+    } finally {
+      setUploading(false);
     }
   };
 
   const inputStyle =
-    "w-full border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 p-3 rounded-lg transition-all outline-none";
+    "w-full border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 p-3 rounded-lg transition-all outline-none disabled:bg-gray-100 disabled:cursor-not-allowed";
 
   const errorText = "text-red-500 text-sm mt-1";
 
@@ -338,8 +359,22 @@ const RegisterWishMaster = () => {
                 ← Back
               </button>
 
-              <button onClick={handleSubmit} className="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-lg shadow-lg">
-                Request Approval 🚀
+              <button
+                onClick={handleSubmit}
+                disabled={uploading}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-lg shadow-lg disabled:opacity-50 flex items-center gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Uploading Documents...
+                  </>
+                ) : (
+                  "Request Approval 🚀"
+                )}
               </button>
             </div>
           </div>

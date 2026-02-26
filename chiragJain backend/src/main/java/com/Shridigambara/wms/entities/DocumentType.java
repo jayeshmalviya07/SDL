@@ -6,5 +6,6 @@ public enum DocumentType {
     POLICE_VERIFICATION,
     AGREEMENT,
     PHOTO,
-    DRIVING_LICENSE
+    DRIVING_LICENSE,
+    BIKE_REGISTRATION
 }

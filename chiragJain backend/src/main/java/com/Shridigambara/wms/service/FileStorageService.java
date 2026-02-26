@@ -30,12 +30,14 @@ public class FileStorageService {
             Files.copy(file.getInputStream(), target);
             return subDir + "/" + filename;
         } catch (IOException e) {
+            System.err.println("ERROR: FileStorageService - Failed to store file: " + e.getMessage());
             throw new BadRequestException("Failed to store file: " + e.getMessage());
         }
     }
 
     private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return "";
+        if (filename == null || !filename.contains("."))
+            return "";
         return filename.substring(filename.lastIndexOf("."));
     }
 }

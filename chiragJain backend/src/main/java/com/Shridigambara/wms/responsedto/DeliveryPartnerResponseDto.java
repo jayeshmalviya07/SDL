@@ -18,4 +18,5 @@ public class DeliveryPartnerResponseDto {
     private ApprovalStatus approvalStatus;
     private Long hubAdminId;
     private String hubName;
+    private String profilePhotoUrl;
 }

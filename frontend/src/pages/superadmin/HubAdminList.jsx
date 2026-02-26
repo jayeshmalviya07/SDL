@@ -12,7 +12,6 @@ const HubAdminList = () => {
     const fetchHubAdmins = async () => {
         try {
             const res = await axiosInstance.get("/hub-admins");
-            console.log("Hub Admins API Response:", res.data);
             const data = res.data?.data || res.data || [];
             if (Array.isArray(data)) {
                 setHubAdmins(data);

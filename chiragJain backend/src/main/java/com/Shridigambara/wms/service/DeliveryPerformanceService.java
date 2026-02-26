@@ -19,4 +19,6 @@ public interface DeliveryPerformanceService {
     Resource downloadMonthlySheet(Long wishMasterId, int year, int month);
 
     void deleteByMonth(Long wishMasterId, int year, int month);
+
+    boolean isWishMasterUnderHubAdmin(Long wishMasterId, Long hubAdminId);
 }

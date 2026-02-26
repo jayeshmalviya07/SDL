@@ -24,8 +24,11 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
 
     private final DeliveryPartnerRepository deliveryPartnerRepository;
     private final HubAdminRepository hubAdminRepository;
-    private final WishMasterDocumentRepository documentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final WishMasterDocumentRepository documentRepository;
+
+    @org.springframework.beans.factory.annotation.Value("${file.upload-dir:uploads}")
+    private String uploadDir;
 
     @Override
     @Transactional
@@ -69,7 +72,8 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
                             .documentType(type)
                             .fileUrl(entry.getValue())
                             .build();
-                    documentRepository.save(doc);
+                    doc = documentRepository.save(doc);
+                    partner.getDocuments().add(doc);
                 } catch (IllegalArgumentException ignored) {
                     // skip invalid document types
                 }
@@ -103,6 +107,7 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DeliveryPartnerResponseDto getById(Long id) {
         DeliveryPartner partner = deliveryPartnerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Partner not found"));
@@ -110,8 +115,18 @@ public class DeliveryPartnerServiceImpl implements DeliveryPartnerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DeliveryPartnerResponseDto> getByHubAdminId(Long hubAdminId) {
         return deliveryPartnerRepository.findByHubAdminId(hubAdminId)
+                .stream()
+                .map(DeliverypartnerMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DeliveryPartnerResponseDto> searchByHubAdminIdAndEmployeeId(Long hubAdminId, String employeeId) {
+        return deliveryPartnerRepository.findByHubAdminIdAndEmployeeIdContainingIgnoreCase(hubAdminId, employeeId)
                 .stream()
                 .map(DeliverypartnerMapper::toResponse)
                 .collect(Collectors.toList());
