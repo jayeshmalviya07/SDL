@@ -1,22 +1,28 @@
 import { useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 
-const NavLink = ({ to, icon, label, isActive }) => (
+const NavLink = ({ to, icon, label, isActive, onClick }) => (
   <Link
     to={to}
-    className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 mb-1 ${isActive
-      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-      : "text-slate-600 hover:bg-slate-50 hover:text-indigo-600"
-      }`}
+    onClick={onClick}
+    className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 mb-1 ${
+      isActive
+        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
+        : "text-slate-600 hover:bg-slate-50 hover:text-indigo-600"
+    }`}
   >
-    <div className={`transition-colors ${isActive ? "text-white" : "text-slate-400 group-hover:text-indigo-500"}`}>
+    <div
+      className={`transition-colors ${
+        isActive ? "text-white" : "text-slate-400 group-hover:text-indigo-500"
+      }`}
+    >
       {icon}
     </div>
     <span className="font-semibold text-sm tracking-tight">{label}</span>
   </Link>
 );
 
-export default function Sidebar() {
+export default function Sidebar({ className = "", onNavigate }) {
   const { user } = useSelector((s) => s.auth);
   const location = useLocation();
 
@@ -32,7 +38,9 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-72 h-screen bg-white border-r border-slate-100 flex flex-col sticky top-0">
+    <div
+      className={`w-72 max-w-full h-full md:h-screen bg-white border-r border-slate-100 flex flex-col sticky md:top-0 ${className}`}
+    >
       {/* Logo Section */}
       <div className="p-8 pb-10">
         <div className="flex items-center gap-3">
@@ -52,31 +60,121 @@ export default function Sidebar() {
 
         {user?.role === "SUPER_ADMIN" && (
           <div className="space-y-1">
-            <NavLink to="/super" label="Dashboard" icon={icons.dashboard} isActive={location.pathname === "/super"} />
-            <NavLink to="/HubList" label="Hub List" icon={icons.hubs} isActive={location.pathname === "/HubList"} />
-            <NavLink to="/HubAdminList" label="Hub Admin List" icon={icons.admins} isActive={location.pathname === "/HubAdminList"} />
-            <NavLink to="/AddHub" label="Add Hub" icon={icons.add} isActive={location.pathname === "/AddHub"} />
-            <NavLink to="/RegisterHubAdmin" label="Register Hub Admin" icon={icons.add} isActive={location.pathname === "/RegisterHubAdmin"} />
-            <NavLink to="/ApproveWishMaster" label="Wish Master Approvals" icon={icons.approvals} isActive={location.pathname === "/ApproveWishMaster"} />
-            <NavLink to="/Reports" label="Reports" icon={icons.reports} isActive={location.pathname === "/Reports"} />
-            <NavLink to="/InactiveUsers" label="Inactive Users" icon={icons.archive} isActive={location.pathname === "/InactiveUsers"} />
+            <NavLink
+              to="/super"
+              label="Dashboard"
+              icon={icons.dashboard}
+              isActive={location.pathname === "/super"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/HubList"
+              label="Hub List"
+              icon={icons.hubs}
+              isActive={location.pathname === "/HubList"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/HubAdminList"
+              label="Hub Admin List"
+              icon={icons.admins}
+              isActive={location.pathname === "/HubAdminList"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/AddHub"
+              label="Add Hub"
+              icon={icons.add}
+              isActive={location.pathname === "/AddHub"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/RegisterHubAdmin"
+              label="Register Hub Admin"
+              icon={icons.add}
+              isActive={location.pathname === "/RegisterHubAdmin"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/ApproveWishMaster"
+              label="Wish Master Approvals"
+              icon={icons.approvals}
+              isActive={location.pathname === "/ApproveWishMaster"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/Reports"
+              label="Reports"
+              icon={icons.reports}
+              isActive={location.pathname === "/Reports"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/InactiveUsers"
+              label="Inactive Users"
+              icon={icons.archive}
+              isActive={location.pathname === "/InactiveUsers"}
+              onClick={onNavigate}
+            />
           </div>
         )}
 
         {user?.role === "HUB_ADMIN" && (
           <div className="space-y-1">
-            <NavLink to="/hub" label="Dashboard" icon={icons.dashboard} isActive={location.pathname === "/hub"} />
-            <NavLink to="/WishMasterList" label="Wish Master List" icon={icons.admins} isActive={location.pathname === "/WishMasterList"} />
-            <NavLink to="/RegisterWishMaster" label="Register Wish Master" icon={icons.add} isActive={location.pathname === "/RegisterWishMaster"} />
-            <NavLink to="/hub/reports" label="Reports" icon={icons.reports} isActive={location.pathname === "/hub/reports"} />
+            <NavLink
+              to="/hub"
+              label="Dashboard"
+              icon={icons.dashboard}
+              isActive={location.pathname === "/hub"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/WishMasterList"
+              label="Wish Master List"
+              icon={icons.admins}
+              isActive={location.pathname === "/WishMasterList"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/RegisterWishMaster"
+              label="Register Wish Master"
+              icon={icons.add}
+              isActive={location.pathname === "/RegisterWishMaster"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/hub/reports"
+              label="Reports"
+              icon={icons.reports}
+              isActive={location.pathname === "/hub/reports"}
+              onClick={onNavigate}
+            />
           </div>
         )}
 
         {user?.role === "WISH_MASTER" && (
           <div className="space-y-1">
-            <NavLink to="/DailyEntry" label="Add Daily Entry" icon={icons.entries} isActive={location.pathname === "/DailyEntry"} />
-            <NavLink to="/MyEntry" label="My Entries" icon={icons.reports} isActive={location.pathname === "/MyEntry"} />
-            <NavLink to="/UniversalReports" label="Reports" icon={icons.reports} isActive={location.pathname === "/UniversalReports"} />
+            <NavLink
+              to="/DailyEntry"
+              label="Add Daily Entry"
+              icon={icons.entries}
+              isActive={location.pathname === "/DailyEntry"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/MyEntry"
+              label="My Entries"
+              icon={icons.reports}
+              isActive={location.pathname === "/MyEntry"}
+              onClick={onNavigate}
+            />
+            <NavLink
+              to="/UniversalReports"
+              label="Reports"
+              icon={icons.reports}
+              isActive={location.pathname === "/UniversalReports"}
+              onClick={onNavigate}
+            />
           </div>
         )}
       </nav>
