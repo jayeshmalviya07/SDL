@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { downloadPdfReport, downloadExcelReport, getWishMasterDetailedReport } from "../../services/reportService";
 import { formatCurrency, formatDate } from "../../utils/formatHelper";
+import EmployeeDetailsSection from "../../components/common/EmployeeDetailsSection";
 
 const UniversalReports = () => {
   const [startDate, setStartDate] = useState("");
@@ -147,8 +148,15 @@ const UniversalReports = () => {
                 <p className="text-2xl font-bold text-gray-900">{reportData.grandTotal?.totalParcelsFailed || 0}</p>
               </div>
               <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50 hover:shadow-md transition-shadow">
-                <p className="text-sm font-medium text-amber-600 mb-1">Returned</p>
-                <p className="text-2xl font-bold text-gray-900">{reportData.grandTotal?.totalParcelsReturned || 0}</p>
+                <p className="text-sm font-medium text-amber-600 mb-1">Hired Rate</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {reportData.grandTotal?.perParcelRate != null ? `₹${reportData.grandTotal.perParcelRate}` :
+                    reportData.grandTotal?.approvedRate != null ? `₹${reportData.grandTotal.approvedRate}` :
+                      reportData.grandTotal?.proposedRate != null ? `₹${reportData.grandTotal.proposedRate}` :
+                        reportData.grandTotal?.per_parcel_rate != null ? `₹${reportData.grandTotal.per_parcel_rate}` :
+                          (reportData.grandTotal?.totalAmount > 0 && reportData.grandTotal?.totalParcelsDelivered > 0) ? `₹${(reportData.grandTotal.totalAmount / reportData.grandTotal.totalParcelsDelivered).toFixed(2)}` :
+                            "—"}
+                </p>
               </div>
               <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 hover:shadow-md transition-shadow col-span-2 md:col-span-1">
                 <p className="text-sm font-medium text-indigo-600 mb-1">Total Earned</p>
@@ -156,6 +164,13 @@ const UniversalReports = () => {
               </div>
             </div>
           </div>
+
+          {/* Employee Details Section */}
+          {reportData?.employeeDetails && (
+            <div className="mb-8">
+              <EmployeeDetailsSection details={reportData.employeeDetails} />
+            </div>
+          )}
 
           {/* Daily Table */}
           <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
@@ -174,7 +189,7 @@ const UniversalReports = () => {
                     <th className="p-4 font-semibold text-center">Taken</th>
                     <th className="p-4 font-semibold text-center">Delivered</th>
                     <th className="p-4 font-semibold text-center">Failed</th>
-                    <th className="p-4 font-semibold text-center">Returned</th>
+                    <th className="p-4 font-semibold text-center">Screenshot</th>
                     <th className="p-4 font-semibold text-right max-w-[120px]">Earnings</th>
                   </tr>
                 </thead>
@@ -182,23 +197,36 @@ const UniversalReports = () => {
                   {reportData.dailyPerformances?.length > 0 ? (
                     reportData.dailyPerformances.map((day, index) => (
                       <tr
-                        key={day.date}
+                        key={day.id || `${day.date}-${index}`}
                         className="hover:bg-gray-50/50 transition-colors"
                       >
                         <td className="p-4 text-center text-gray-400 text-sm">{index + 1}</td>
                         <td className="p-4 font-medium text-gray-900">{formatDate(day.date)}</td>
-                        <td className="p-4 text-center text-blue-600">{day.parcelsReceived}</td>
-                        <td className="p-4 text-center font-medium text-emerald-600">{day.parcelsDelivered}</td>
-                        <td className="p-4 text-center text-red-600">{day.parcelsFailed}</td>
-                        <td className="p-4 text-center text-amber-600">{day.parcelsReturned}</td>
-                        <td className="p-4 text-right font-medium text-indigo-600">
+                        <td className="p-4 text-center text-blue-600 font-medium">{day.parcelsReceived}</td>
+                        <td className="p-4 text-center font-bold text-emerald-600">{day.parcelsDelivered}</td>
+                        <td className="p-4 text-center text-red-600 font-medium">{day.parcelsFailed}</td>
+                        <td className="p-4 text-center">
+                          {day.screenshotUrl ? (
+                            <a
+                              href={day.screenshotUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-indigo-600 hover:text-indigo-800 font-bold underline decoration-indigo-200 underline-offset-4 decoration-2"
+                            >
+                              🖼️ View
+                            </a>
+                          ) : (
+                            <span className="text-gray-300">—</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-right font-bold text-indigo-600">
                           {formatCurrency(day.amount)}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="p-8 text-center text-gray-500">
+                      <td colSpan="8" className="p-8 text-center text-gray-500">
                         No performance entries found for this date range.
                       </td>
                     </tr>

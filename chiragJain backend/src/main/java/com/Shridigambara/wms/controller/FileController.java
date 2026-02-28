@@ -20,10 +20,13 @@ public class FileController {
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
 
-    @GetMapping("/download/{subDir}/{filename:.+}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String subDir, @PathVariable String filename) {
+    @GetMapping("/{subDir}/{filename:.+}")
+    public ResponseEntity<Resource> getFile(@PathVariable String subDir, @PathVariable String filename) {
         try {
             Path filePath = Paths.get(uploadDir).resolve(subDir).resolve(filename).normalize();
+            System.out.println("DEBUG: Requesting file: " + subDir + "/" + filename);
+            System.out.println("DEBUG: Resolved path: " + filePath.toAbsolutePath());
+
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists() && resource.isReadable()) {
@@ -36,9 +39,11 @@ public class FileController {
                         .contentType(MediaType.parseMediaType(contentType))
                         .body(resource);
             } else {
+                System.out.println("DEBUG: File not found or not readable at: " + filePath.toAbsolutePath());
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
+            System.out.println("DEBUG: Error serving file: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

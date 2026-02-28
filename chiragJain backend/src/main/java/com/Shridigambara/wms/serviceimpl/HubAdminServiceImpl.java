@@ -65,13 +65,22 @@ public class HubAdminServiceImpl implements HubAdminService {
     public List<HubAdminResponseDto> getByHubId(Long hubId) {
         return hubAdminRepository.findByHub_Id(hubId)
                 .stream()
+                .filter(h -> h.getIsActive() == null || h.getIsActive())
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<HubAdminResponseDto> getAllHubAdmins() {
-        return hubAdminRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        return hubAdminRepository.findActive().stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteHubAdmin(Long id) {
+        HubAdmin admin = hubAdminRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Hub Admin not found"));
+        admin.setIsActive(false);
+        hubAdminRepository.save(admin);
     }
 
     private HubAdminResponseDto toDto(HubAdmin admin) {
@@ -83,6 +92,7 @@ public class HubAdminServiceImpl implements HubAdminService {
                 .hubId(admin.getHub().getId())
                 .hubName(admin.getHub().getName())
                 .city(admin.getHub().getCity())
+                .isActive(admin.getIsActive())
                 .build();
     }
 }

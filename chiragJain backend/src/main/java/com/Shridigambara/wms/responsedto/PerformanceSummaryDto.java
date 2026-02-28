@@ -11,4 +11,7 @@ public class PerformanceSummaryDto {
     private Long totalParcelsFailed;
     private Long totalParcelsReturned;
     private Double totalAmount;
+    private Double perParcelRate;
+    private Double proposedRate;
+    private Double approvedRate;
 }

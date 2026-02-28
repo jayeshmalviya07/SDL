@@ -90,6 +90,13 @@ public class DeliveryPartnerController {
         throw new IllegalStateException("Wish Master context required");
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_HUB_ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.deleteWishMaster(id);
+        return ResponseEntity.noContent().build();
+    }
+
     private Long getHubAdminIdFromContext() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {

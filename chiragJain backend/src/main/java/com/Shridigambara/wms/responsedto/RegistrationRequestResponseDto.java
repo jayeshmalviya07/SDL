@@ -4,9 +4,12 @@ import com.Shridigambara.wms.entities.ApprovalStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
 @Data
 @Builder
-public class DeliveryPartnerResponseDto {
+public class RegistrationRequestResponseDto {
     private Long id;
     private String employeeId;
     private String name;
@@ -14,8 +17,10 @@ public class DeliveryPartnerResponseDto {
     private String address;
     private String vehicleNumber;
     private Double proposedRate;
-    private Double approvedRate;
-    private ApprovalStatus approvalStatus;
+    private Map<String, String> documents;
+    private ApprovalStatus status;
     private Long hubAdminId;
     private String hubName;
+    private String hubCity;
+    private LocalDateTime createdAt;
 }

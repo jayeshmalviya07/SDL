@@ -15,11 +15,18 @@ public class DeliveryPerformanceMapper {
                 .parcelsDelivered(entity.getParcelsDelivered())
                 .parcelsFailed(entity.getParcelsFailed())
                 .parcelsReturned(entity.getParcelsReturned())
-                .screenshotUrl(entity.getScreenshotUrl())
+                .screenshotUrl(normalizeUrl(entity.getScreenshotUrl()))
                 .verificationStatus(entity.getVerificationStatus())
                 .calculatedAmount(entity.getCalculatedAmount())
                 .overrideAmount(entity.getOverrideAmount())
                 .finalAmount(entity.getFinalAmount())
                 .build();
+    }
+
+    private static String normalizeUrl(String url) {
+        if (url == null || url.isEmpty() || url.startsWith("/api/uploads/")) {
+            return url;
+        }
+        return "/api/uploads/" + url;
     }
 }

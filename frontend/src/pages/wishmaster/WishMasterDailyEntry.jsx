@@ -11,50 +11,92 @@ const WishMasterDailyEntry = () => {
     parcelsTaken: "",
     parcelsDelivered: "",
     parcelsFailed: "",
+    screenshotUrl: "",
   });
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
+    setFormData((prev) => {
+      const nextData = { ...prev, [name]: value };
+
+      // Auto-calculate failed: Failed = Taken - Delivered
+      if (name === "parcelsTaken" || name === "parcelsDelivered") {
+        const taken = Number(name === "parcelsTaken" ? value : prev.parcelsTaken) || 0;
+        const delivered = Number(name === "parcelsDelivered" ? value : prev.parcelsDelivered) || 0;
+        const failed = Math.max(0, taken - delivered);
+        nextData.parcelsFailed = failed.toString();
+      }
+
+      return nextData;
     });
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!formData.parcelsTaken || !formData.parcelsDelivered || !formData.parcelsFailed) {
-      alert("Please fill all fields");
+    const taken = Number(formData.parcelsTaken) || 0;
+    const delivered = Number(formData.parcelsDelivered) || 0;
+    const failed = Number(formData.parcelsFailed) || 0;
+
+    if (taken === 0 && delivered === 0 && failed === 0) {
+      alert("Please enter values for parcels.");
       return;
     }
-
-    const taken = Number(formData.parcelsTaken);
-    const delivered = Number(formData.parcelsDelivered);
-    const failed = Number(formData.parcelsFailed);
 
     if (delivered + failed > taken) {
       alert("Delivered + Failed cannot exceed Parcels Taken.");
       return;
     }
 
-    const payload = {
-      employeeId: user?.sub || user?.username || "",
-      deliveryDate: today,
-      parcelsTaken: taken,
-      parcelsDelivered: delivered,
-      parcelsFailed: failed,
-    };
+    setUploading(true);
+    let finalScreenshotUrl = formData.screenshotUrl;
 
     try {
+      // 1. Upload file if selected
+      if (selectedFile) {
+        const fileData = new FormData();
+        fileData.append("file", selectedFile);
+        const uploadRes = await axiosInstance.post("/upload/screenshot", fileData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        finalScreenshotUrl = uploadRes.data.fileUrl;
+      }
+
+      // 2. Submit Entry
+      const payload = {
+        employeeId: user?.sub || user?.username || "",
+        deliveryDate: today,
+        parcelsTaken: taken,
+        parcelsDelivered: delivered,
+        parcelsFailed: failed,
+        parcelsReturned: 0,
+        screenshotUrl: finalScreenshotUrl,
+      };
+
       await axiosInstance.post("/performance/entry", payload, {
         headers: { "Content-Type": "application/json" },
       });
+
       alert("Entry submitted successfully ✅");
       setFormData({
         deliveryDate: today,
         parcelsTaken: "",
         parcelsDelivered: "",
         parcelsFailed: "",
+        screenshotUrl: "",
       });
+      setSelectedFile(null);
+      // Reset file input manually
+      const fileInput = document.getElementById("screenshot-upload");
+      if (fileInput) fileInput.value = "";
+
     } catch (error) {
       console.error("Daily entry error:", error.response?.data || error.message);
       const data = error.response?.data;
@@ -64,6 +106,8 @@ const WishMasterDailyEntry = () => {
       } else {
         alert(data?.error || data?.message || "Submission failed ❌");
       }
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -89,7 +133,7 @@ const WishMasterDailyEntry = () => {
               readOnly
               className="border rounded-xl p-3 bg-indigo-50 font-semibold text-indigo-700 cursor-not-allowed opacity-80"
             />
-            <p className="text-xs text-gray-400 mt-1">Only today's date is allowed. Re-submitting will update today's entry.</p>
+            <p className="text-xs text-gray-400 mt-1">Only today's date is allowed. You can submit multiple entries for the same day.</p>
           </div>
 
           {[
@@ -113,13 +157,29 @@ const WishMasterDailyEntry = () => {
             </div>
           ))}
 
+          {/* Screenshot Upload - Optional */}
+          <div className="flex flex-col">
+            <label className="mb-2 font-medium text-gray-600">
+              📷 Screenshot
+            </label>
+            <input
+              id="screenshot-upload"
+              type="file"
+              accept="image/*"
+              title="Screenshot"
+              onChange={handleFileChange}
+              className="border rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-400 outline-none text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+            />
+          </div>
+
         </div>
 
         <button
           onClick={handleSubmit}
-          className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold shadow-lg transition"
+          disabled={uploading}
+          className={`mt-8 w-full ${uploading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-3 rounded-xl font-semibold shadow-lg transition`}
         >
-          Submit Entry
+          {uploading ? "Uploading & Submitting..." : "Submit Entry"}
         </button>
       </div>
     </div>

@@ -45,6 +45,20 @@ const HubAdminList = () => {
         navigate(`/HubAdminDetails/${admin.id}`);
     };
 
+    const handleDelete = async (e, id) => {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to delete this Hub Admin? This will move them to the inactive section.")) {
+            try {
+                const res = await axiosInstance.delete(`/hub-admins/${id}`);
+                toast.success("Hub Admin deleted successfully");
+                fetchHubAdmins();
+            } catch (error) {
+                console.error("Error deleting hub admin:", error);
+                toast.error("Failed to delete hub admin");
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 px-4 sm:px-6 lg:px-10 py-8 relative">
             <div className="max-w-7xl mx-auto">
@@ -106,8 +120,8 @@ const HubAdminList = () => {
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Hub Name
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        City
+                                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Actions
                                     </th>
                                 </tr>
                             </thead>
@@ -138,6 +152,17 @@ const HubAdminList = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium whitespace-break-spaces">
                                             {admin.city || "N/A"}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button
+                                                onClick={(e) => handleDelete(e, admin.id)}
+                                                className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center justify-center ml-auto"
+                                            >
+                                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                                Delete
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}

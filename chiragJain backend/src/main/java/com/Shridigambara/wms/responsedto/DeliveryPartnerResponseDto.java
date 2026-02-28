@@ -19,4 +19,6 @@ public class DeliveryPartnerResponseDto {
     private Long hubAdminId;
     private String hubName;
     private String profilePhotoUrl;
+    private java.util.Map<String, String> documents;
+    private Boolean isActive;
 }

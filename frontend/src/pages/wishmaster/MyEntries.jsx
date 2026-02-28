@@ -144,6 +144,7 @@ const MyEntry = () => {
               <th className="p-3 text-center">Taken</th>
               <th className="p-3 text-center">Delivered</th>
               <th className="p-3 text-center">Failed</th>
+              <th className="p-3 text-center">Screenshot</th>
               <th className="p-3 text-center">Earning (₹)</th>
               <th className="p-3 text-center">Status</th>
             </tr>
@@ -152,7 +153,7 @@ const MyEntry = () => {
           <tbody>
             {entries.length === 0 ? (
               <tr>
-                <td colSpan="6" className="p-6 text-center text-gray-400">
+                <td colSpan="7" className="p-6 text-center text-gray-400">
                   No entries found. Submit your first daily entry!
                 </td>
               </tr>
@@ -163,6 +164,20 @@ const MyEntry = () => {
                   <td className="p-3 text-center">{entry.parcelsTaken}</td>
                   <td className="p-3 text-center">{entry.parcelsDelivered}</td>
                   <td className="p-3 text-center">{entry.parcelsFailed}</td>
+                  <td className="p-3 text-center">
+                    {entry.screenshotUrl ? (
+                      <a
+                        href={entry.screenshotUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800 font-semibold underline decoration-dotted underline-offset-4"
+                      >
+                        🖼️ View
+                      </a>
+                    ) : (
+                      <span className="text-gray-300">—</span>
+                    )}
+                  </td>
                   <td className="p-3 text-center font-semibold text-green-700">
                     ₹{(entry.finalAmount ?? entry.calculatedAmount ?? 0).toFixed(2)}
                   </td>

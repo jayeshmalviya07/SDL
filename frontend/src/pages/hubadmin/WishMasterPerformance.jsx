@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/axiosInstance";
 import { downloadPdfReport, downloadExcelReport, getHubWishMasterDetailedReport } from "../../services/reportService";
 import { formatCurrency, formatDate } from "../../utils/formatHelper";
+import EmployeeDetailsSection from "../../components/common/EmployeeDetailsSection";
 
 const HubWishMasterPerformance = () => {
     const { wmId } = useParams();
@@ -77,9 +78,9 @@ const HubWishMasterPerformance = () => {
         setActionLoading(type);
         try {
             if (type === "pdf") {
-                await downloadPdfReport(startDate, endDate, reportData);
+                await downloadPdfReport(startDate, endDate, reportData, wishMaster);
             } else {
-                await downloadExcelReport(startDate, endDate, reportData);
+                await downloadExcelReport(startDate, endDate, reportData, wishMaster);
             }
         } catch (err) {
             setError(err.message || "Download failed");
@@ -144,33 +145,48 @@ const HubWishMasterPerformance = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="date"
-                                className="border p-2 rounded-xl text-sm"
-                                value={startDate}
-                                max={new Date().toISOString().split("T")[0]}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                            <span className="text-gray-400">to</span>
-                            <input
-                                type="date"
-                                className="border p-2 rounded-xl text-sm"
-                                value={endDate}
-                                max={new Date().toISOString().split("T")[0]}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
+                    <div className="flex items-center gap-4 bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className="relative group">
+                                <input
+                                    type="date"
+                                    className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none transition-all shadow-sm group-hover:border-indigo-200"
+                                    value={startDate}
+                                    max={new Date().toISOString().split("T")[0]}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                                <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <span className="text-gray-400 font-bold">to</span>
+                            <div className="relative group">
+                                <input
+                                    type="date"
+                                    className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none transition-all shadow-sm group-hover:border-indigo-200"
+                                    value={endDate}
+                                    max={new Date().toISOString().split("T")[0]}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                                <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
                         </div>
                         <button
                             onClick={() => fetchReport()}
                             disabled={actionLoading !== null}
-                            className="bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all font-medium"
+                            className="bg-indigo-600 text-white px-8 py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all font-semibold shadow-md active:scale-95 whitespace-nowrap"
                         >
-                            {actionLoading === "view" ? "Loading..." : "Update View"}
+                            {actionLoading === "view" ? "Loading..." : "View"}
                         </button>
                     </div>
                 </div>
+
+                {/* Employee Details Section */}
+                {reportData?.employeeDetails && (
+                    <EmployeeDetailsSection details={reportData.employeeDetails} />
+                )}
 
                 {error && (
                     <div className="bg-red-50 text-red-600 p-4 rounded-2xl border border-red-100 text-sm">
@@ -212,25 +228,31 @@ const HubWishMasterPerformance = () => {
                             <p className="text-sm text-gray-400">Detailed breakdown of tasks </p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <input
-                                type="month"
-                                value={deleteMonth}
-                                onChange={(e) => setDeleteMonth(e.target.value)}
-                                className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-red-400 outline-none"
-                            />
+                            <div className="relative group">
+                                <input
+                                    type="month"
+                                    value={deleteMonth}
+                                    onChange={(e) => setDeleteMonth(e.target.value)}
+                                    className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none transition-all shadow-sm group-hover:border-red-200"
+                                />
+                                <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
                             <button
                                 onClick={handleDeleteByMonth}
                                 disabled={deleting || !deleteMonth}
-                                className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white text-sm px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2 shadow-sm"
+                                className="bg-red-500 hover:bg-red-600 disabled:bg-gray-200 text-white text-sm px-5 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-md active:scale-95"
                             >
-                                🗑️ {deleting ? "Deleting..." : "Delete Month"}
+                                <span>🗑️</span>
+                                {deleting ? "Deleting..." : "Delete Month"}
                             </button>
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => handleDownload("pdf")}
                                 disabled={actionLoading !== null}
-                                className="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black transition-all flex items-center gap-2"
+                                className="bg-gray-800 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-black transition-all flex items-center gap-2 shadow-md active:scale-95"
                             >
                                 {actionLoading === "pdf" ? "Preparing..." : (
                                     <>
@@ -244,7 +266,7 @@ const HubWishMasterPerformance = () => {
                             <button
                                 onClick={() => handleDownload("excel")}
                                 disabled={actionLoading !== null}
-                                className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 transition-all flex items-center gap-2"
+                                className="bg-emerald-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-md active:scale-95"
                             >
                                 {actionLoading === "excel" ? "Preparing..." : (
                                     <>
@@ -264,23 +286,36 @@ const HubWishMasterPerformance = () => {
                                 <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                     <th className="px-8 py-4 text-center w-16">#</th>
                                     <th className="px-8 py-4">Date</th>
-                                    <th className="px-8 py-4 text-center">Taken</th>
-                                    <th className="px-8 py-4 text-center">Delivered</th>
-                                    <th className="px-8 py-4 text-center">Failed</th>
-                                    <th className="px-8 py-4 text-center">Returned</th>
-                                    <th className="px-8 py-4 text-right">Earning</th>
+                                    <th className="px-8 py-4 text-center text-blue-500">Taken</th>
+                                    <th className="px-8 py-4 text-center text-emerald-500">Delivered</th>
+                                    <th className="px-8 py-4 text-center text-red-500">Failed</th>
+                                    <th className="px-8 py-4 text-center text-indigo-500">Screenshot</th>
+                                    <th className="px-8 py-4 text-right text-gray-800">Earning</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {reportData?.dailyPerformances?.length > 0 ? (
                                     reportData.dailyPerformances.map((p, index) => (
-                                        <tr key={p.date} className="hover:bg-indigo-50/30 transition-colors group">
+                                        <tr key={p.id || `${p.date}-${index}`} className="hover:bg-indigo-50/30 transition-colors group">
                                             <td className="px-8 py-5 text-center text-gray-400 text-sm font-mono">{index + 1}</td>
                                             <td className="px-8 py-5 font-medium text-gray-800">{formatDate(p.date)}</td>
                                             <td className="px-8 py-5 text-center font-medium text-blue-600 bg-blue-50/30 group-hover:bg-transparent">{p.parcelsReceived}</td>
                                             <td className="px-8 py-5 text-center font-bold text-emerald-600 bg-emerald-50/30 group-hover:bg-transparent">{p.parcelsDelivered}</td>
                                             <td className="px-8 py-5 text-center font-medium text-red-500 bg-red-50/30 group-hover:bg-transparent">{p.parcelsFailed}</td>
-                                            <td className="px-8 py-5 text-center font-medium text-amber-600 bg-amber-50/30 group-hover:bg-transparent">{p.parcelsReturned}</td>
+                                            <td className="px-8 py-5 text-center">
+                                                {p.screenshotUrl ? (
+                                                    <a
+                                                        href={p.screenshotUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-indigo-600 hover:text-indigo-800 font-bold underline decoration-indigo-200 underline-offset-4 decoration-2"
+                                                    >
+                                                        🖼️ View
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-gray-300">—</span>
+                                                )}
+                                            </td>
                                             <td className="px-8 py-5 text-right font-bold text-indigo-600 bg-indigo-50/30 group-hover:bg-transparent">
                                                 {formatCurrency(p.amount)}
                                             </td>
@@ -288,7 +323,7 @@ const HubWishMasterPerformance = () => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" className="px-8 py-20 text-center text-gray-400 italic">
+                                        <td colSpan="8" className="px-8 py-20 text-center text-gray-400 italic">
                                             No performance entries found for selected date range.
                                         </td>
                                     </tr>

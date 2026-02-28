@@ -13,4 +13,6 @@ public interface HubAdminService {
     List<HubAdminResponseDto> getByHubId(Long hubId);
 
     List<HubAdminResponseDto> getAllHubAdmins();
+
+    void deleteHubAdmin(Long id);
 }

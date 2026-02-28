@@ -10,58 +10,54 @@ import java.time.LocalDateTime;
 @Entity
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Table(
-        name = "delivery_performance",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"wish_master_id", "delivery_date"})
-        })
+@Table(name = "delivery_performance")
 @Builder
 public class DeliveryPerformance {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "wish_master_id", nullable = false)
-    private DeliveryPartner wishMaster;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "wish_master_id", nullable = false)
+        private DeliveryPartner wishMaster;
 
-    @Column(name = "delivery_date", nullable = false)
-    private LocalDate deliveryDate;
+        @Column(name = "delivery_date", nullable = false)
+        private LocalDate deliveryDate;
 
-    @Column(name = "parcels_taken", nullable = false)
-    private Integer parcelsTaken;
+        @Column(name = "parcels_taken", nullable = false)
+        private Integer parcelsTaken;
 
-    @Column(name = "parcels_delivered", nullable = false)
-    private Integer parcelsDelivered;
+        @Column(name = "parcels_delivered", nullable = false)
+        private Integer parcelsDelivered;
 
-    @Column(name = "parcels_failed", nullable = false)
-    private Integer parcelsFailed;
+        @Column(name = "parcels_failed", nullable = false)
+        private Integer parcelsFailed;
 
-    @Column(name = "parcels_returned")
-    private Integer parcelsReturned;
+        @Column(name = "parcels_returned")
+        private Integer parcelsReturned;
 
-    @Column(name = "screenshot_url")
-    private String screenshotUrl;
+        @Column(name = "screenshot_url")
+        private String screenshotUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "verification_status")
-    @Builder.Default
-    private VerificationStatus verificationStatus = VerificationStatus.PENDING;
+        @Enumerated(EnumType.STRING)
+        @Column(name = "verification_status")
+        @Builder.Default
+        private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "verified_by")
-    private HubAdmin verifiedBy;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "verified_by")
+        private HubAdmin verifiedBy;
 
-    @Column(name = "verified_at")
-    private LocalDateTime verifiedAt;
+        @Column(name = "verified_at")
+        private LocalDateTime verifiedAt;
 
-    @Column(name = "calculated_amount", nullable = false)
-    private Double calculatedAmount;
+        @Column(name = "calculated_amount", nullable = false)
+        private Double calculatedAmount;
 
-    @Column(name = "override_amount")
-    private Double overrideAmount;
+        @Column(name = "override_amount")
+        private Double overrideAmount;
 
-    @Column(name = "final_amount", nullable = false)
-    private Double finalAmount;
+        @Column(name = "final_amount", nullable = false)
+        private Double finalAmount;
 }

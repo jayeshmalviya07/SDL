@@ -24,7 +24,7 @@ export default function Dashboard() {
 
   const fetchPendingCount = async () => {
     try {
-      const res = await axiosInstance.get("/delivery/pending");
+      const res = await axiosInstance.get("/superadmin/pending-registrations");
       const pending = res.data || [];
       setPendingCount(pending.length);
     } catch (error) {

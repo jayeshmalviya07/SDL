@@ -35,22 +35,21 @@ public class DeliveryPerformanceServiceImpl implements DeliveryPerformanceServic
 
     @Override
     public DeliveryPerformanceResponseDto createOrUpdateEntry(DeliveryPerformanceRequestDto request) {
-        // Only allow entries for today's date
-        if (request.getDeliveryDate() != null && !request.getDeliveryDate().equals(LocalDate.now())) {
-            throw new IllegalArgumentException("Entries can only be submitted for today's date");
-        }
-        if (request.getDeliveryDate() == null) {
-            request.setDeliveryDate(LocalDate.now());
+        // Relaxed date check: allow today, yesterday, or tomorrow (handles timezone
+        // shifts/late night entries)
+        LocalDate serverToday = LocalDate.now();
+        if (request.getDeliveryDate() != null) {
+            LocalDate requestedDate = request.getDeliveryDate();
+            if (requestedDate.isBefore(serverToday.minusDays(1)) || requestedDate.isAfter(serverToday.plusDays(1))) {
+                throw new IllegalArgumentException(
+                        "Entries can only be submitted for a window of +/- 1 day from today");
+            }
+        } else {
+            request.setDeliveryDate(serverToday);
         }
 
         DeliveryPartner wishMaster = resolveWishMaster(request);
         validateNumbers(request);
-
-        Optional<DeliveryPerformance> existing = request.getWishMasterId() != null
-                ? performanceRepository.findByWishMaster_IdAndDeliveryDate(request.getWishMasterId(),
-                        request.getDeliveryDate())
-                : performanceRepository.findByWishMaster_IdAndDeliveryDate(wishMaster.getId(),
-                        request.getDeliveryDate());
 
         Double rate = wishMaster.getApprovedRate() != null ? wishMaster.getApprovedRate()
                 : wishMaster.getProposedRate();
@@ -59,37 +58,21 @@ public class DeliveryPerformanceServiceImpl implements DeliveryPerformanceServic
         double calculatedAmount = request.getParcelsDelivered() * rate;
         double finalAmount = request.getOverrideAmount() != null ? request.getOverrideAmount() : calculatedAmount;
 
-        DeliveryPerformance entity;
-        if (existing.isPresent()) {
-            entity = existing.get();
-            entity.setParcelsTaken(request.getParcelsTaken());
-            entity.setParcelsDelivered(request.getParcelsDelivered());
-            entity.setParcelsFailed(request.getParcelsFailed());
-            entity.setParcelsReturned(request.getParcelsReturned() != null ? request.getParcelsReturned() : 0);
-            entity.setScreenshotUrl(request.getScreenshotUrl());
-            entity.setCalculatedAmount(calculatedAmount);
-            entity.setOverrideAmount(request.getOverrideAmount());
-            entity.setFinalAmount(finalAmount);
-            // Auto-approve entries (no Hub Admin verification needed)
-            entity.setVerificationStatus(VerificationStatus.APPROVED);
-            entity.setVerifiedBy(null);
-            entity.setVerifiedAt(LocalDateTime.now());
-        } else {
-            entity = DeliveryPerformance.builder()
-                    .wishMaster(wishMaster)
-                    .deliveryDate(request.getDeliveryDate())
-                    .parcelsTaken(request.getParcelsTaken())
-                    .parcelsDelivered(request.getParcelsDelivered())
-                    .parcelsFailed(request.getParcelsFailed())
-                    .parcelsReturned(request.getParcelsReturned() != null ? request.getParcelsReturned() : 0)
-                    .screenshotUrl(request.getScreenshotUrl())
-                    .verificationStatus(VerificationStatus.APPROVED) // Auto-approved
-                    .verifiedAt(LocalDateTime.now())
-                    .calculatedAmount(calculatedAmount)
-                    .overrideAmount(request.getOverrideAmount())
-                    .finalAmount(finalAmount)
-                    .build();
-        }
+        DeliveryPerformance entity = DeliveryPerformance.builder()
+                .wishMaster(wishMaster)
+                .deliveryDate(request.getDeliveryDate())
+                .parcelsTaken(request.getParcelsTaken())
+                .parcelsDelivered(request.getParcelsDelivered())
+                .parcelsFailed(request.getParcelsFailed())
+                .parcelsReturned(request.getParcelsReturned() != null ? request.getParcelsReturned() : 0)
+                .screenshotUrl(request.getScreenshotUrl())
+                .verificationStatus(VerificationStatus.APPROVED) // Auto-approved
+                .verifiedAt(LocalDateTime.now())
+                .calculatedAmount(calculatedAmount)
+                .overrideAmount(request.getOverrideAmount())
+                .finalAmount(finalAmount)
+                .build();
+
         entity = performanceRepository.save(entity);
         return DeliveryPerformanceMapper.toResponse(entity);
     }
@@ -174,7 +157,7 @@ public class DeliveryPerformanceServiceImpl implements DeliveryPerformanceServic
 
     private void createHeaderRow(Sheet sheet) {
         Row header = sheet.createRow(0);
-        String[] headers = { "Date", "Parcels Taken", "Delivered", "Failed", "Returned", "Amount" };
+        String[] headers = { "Date", "Parcels Taken", "Delivered", "Failed", "Returned", "Screenshot", "Amount" };
         for (int i = 0; i < headers.length; i++) {
             Cell cell = header.createCell(i);
             cell.setCellValue(headers[i]);
@@ -188,7 +171,8 @@ public class DeliveryPerformanceServiceImpl implements DeliveryPerformanceServic
         row.createCell(2).setCellValue(e.getParcelsDelivered());
         row.createCell(3).setCellValue(e.getParcelsFailed());
         row.createCell(4).setCellValue(e.getParcelsReturned() != null ? e.getParcelsReturned() : 0);
-        row.createCell(5).setCellValue(e.getFinalAmount());
+        row.createCell(5).setCellValue(e.getScreenshotUrl() != null ? e.getScreenshotUrl() : "");
+        row.createCell(6).setCellValue(e.getFinalAmount());
     }
 
     @Override

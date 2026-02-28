@@ -116,7 +116,7 @@ export default function Navbar() {
         </div>
       ) : (
         <h1 className="text-lg font-semibold text-gray-800">
-          {user?.name || user?.sub || "SDL"}
+          {user?.name || user?.sub || "Shridigambara"}
         </h1>
       )}
 

@@ -13,4 +13,5 @@ public class HubAdminResponseDto {
     private Long hubId;
     private String hubName;
     private String city;
+    private Boolean isActive;
 }

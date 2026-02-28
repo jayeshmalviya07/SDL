@@ -5,14 +5,7 @@ import { login as loginAction } from "../../store/slices/authSlice";
 import { login as loginApi } from "../../services/authService";
 import loginAvatar from "../../assets/login/loginAvatar.png";
 
-const roles = [
-  { key: "SUPER_ADMIN", label: "Super Admin", icon: "🛡️", placeholder: "Email", color: "from-indigo-500 to-indigo-600", hoverColor: "hover:from-indigo-600 hover:to-indigo-700", ring: "focus:ring-indigo-500/70", border: "border-indigo-500", bg: "bg-indigo-50", text: "text-indigo-700" },
-  { key: "HUB_ADMIN", label: "Hub Admin", icon: "🏢", placeholder: "Email or Username", color: "from-orange-500 to-orange-600", hoverColor: "hover:from-orange-600 hover:to-orange-700", ring: "focus:ring-orange-500/70", border: "border-orange-500", bg: "bg-orange-50", text: "text-orange-700" },
-  { key: "WISH_MASTER", label: "Wish Master", icon: "🏍️", placeholder: "Employee ID", color: "from-emerald-500 to-emerald-600", hoverColor: "hover:from-emerald-600 hover:to-emerald-700", ring: "focus:ring-emerald-500/70", border: "border-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700" },
-];
-
 const Login = () => {
-  const [selectedRole, setSelectedRole] = useState(1); // default Hub Admin
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,13 +13,11 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const currentRole = roles[selectedRole];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!usernameOrEmail.trim() || !password) {
-      setError(`${currentRole.placeholder} and Password are required`);
+      setError(`Email, Username, or Employee ID and Password are required`);
       return;
     }
     setLoading(true);
@@ -130,33 +121,6 @@ const Login = () => {
             shadow-2xl
             border border-gray-200/70    
           ">
-            {/* Role Tabs */}
-            <div className="flex gap-2 mb-6">
-              {roles.map((role, idx) => (
-                <button
-                  key={role.key}
-                  type="button"
-                  onClick={() => {
-                    setSelectedRole(idx);
-                    setError("");
-                    setUsernameOrEmail("");
-                    setPassword("");
-                  }}
-                  className={`
-                    flex-1 py-3 px-2 rounded-xl text-xs sm:text-sm font-semibold
-                    transition-all duration-300 border-2
-                    ${selectedRole === idx
-                      ? `bg-gradient-to-r ${role.color} text-white border-transparent shadow-lg scale-105`
-                      : `bg-white ${role.text} ${role.border} hover:shadow-md`
-                    }
-                  `}
-                >
-                  <span className="block text-lg mb-1">{role.icon}</span>
-                  {role.label}
-                </button>
-              ))}
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <p className="text-red-600 text-sm bg-red-50 px-4 py-2 rounded-xl">
@@ -165,7 +129,7 @@ const Login = () => {
               )}
               <input
                 type="text"
-                placeholder={currentRole.placeholder}
+                placeholder="Email, Username, or Employee ID"
                 value={usernameOrEmail}
                 onChange={(e) => setUsernameOrEmail(e.target.value)}
                 className={`
@@ -175,7 +139,7 @@ const Login = () => {
                   rounded-2xl
                   text-gray-900
                   placeholder-gray-500
-                  focus:outline-none focus:ring-2 ${currentRole.ring} focus:border-transparent
+                  focus:outline-none focus:ring-2 focus:ring-orange-500/70 focus:border-transparent
                   transition-all duration-200
                 `}
                 disabled={loading}
@@ -193,7 +157,7 @@ const Login = () => {
                   rounded-2xl
                   text-gray-900
                   placeholder-gray-500
-                  focus:outline-none focus:ring-2 ${currentRole.ring} focus:border-transparent
+                  focus:outline-none focus:ring-2 focus:ring-orange-500/70 focus:border-transparent
                   transition-all duration-200
                 `}
                 disabled={loading}
@@ -204,8 +168,8 @@ const Login = () => {
                 disabled={loading}
                 className={`
                   w-full
-                  bg-gradient-to-r ${currentRole.color}
-                  ${currentRole.hoverColor}
+                  bg-gradient-to-r from-orange-500 to-orange-600
+                  hover:from-orange-600 hover:to-orange-700
                   text-white font-bold text-lg
                   py-4
                   rounded-2xl
@@ -216,7 +180,7 @@ const Login = () => {
                   disabled:opacity-70 disabled:cursor-not-allowed
                 `}
               >
-                {loading ? "Logging in..." : `Login as ${currentRole.label}`}
+                {loading ? "Logging in..." : "Login"}
               </button>
             </form>
 

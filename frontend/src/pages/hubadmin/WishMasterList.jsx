@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../services/axiosInstance";
+import { toast } from "react-toastify";
 
 const WishMasterList = () => {
   const [wishMasters, setWishMasters] = useState([]);
@@ -8,6 +9,14 @@ const WishMasterList = () => {
   const [searchId, setSearchId] = useState("");
   const [searching, setSearching] = useState(false);
   const navigate = useNavigate();
+
+  const getFileUrl = (url) => {
+    if (!url) return "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
+    if (url.startsWith("/api/uploads/")) return url;
+    if (url.startsWith("/api/files/")) return url.replace("/api/files/", "/api/uploads/");
+    if (url.startsWith("http")) return url;
+    return `/api/uploads/${url}`;
+  };
 
   useEffect(() => {
     fetchWishMasters();
@@ -47,6 +56,20 @@ const WishMasterList = () => {
 
   const handleViewPerformance = (wmId) => {
     navigate(`/hub/wishmasters/${wmId}/performance`);
+  };
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this Wish Master? This will move them to the inactive section.")) {
+      try {
+        await axiosInstance.delete(`/delivery/${id}`);
+        toast.success("Wish Master deleted successfully");
+        fetchWishMasters();
+      } catch (error) {
+        console.error("Error deleting wish master:", error);
+        toast.error("Failed to delete wish master");
+      }
+    }
   };
 
   if (loading && !searching) {
@@ -131,15 +154,20 @@ const WishMasterList = () => {
             {wishMasters.map((wm) => (
               <div
                 key={wm.id}
-                className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300 flex flex-col"
+                onClick={() => handleViewPerformance(wm.id)}
+                className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300 flex flex-col cursor-pointer"
               >
                 <div className="p-5 flex items-start gap-4">
                   {/* Photo Section */}
                   <div className="relative shrink-0">
                     <img
-                      src={wm.profilePhotoUrl ? `${wm.profilePhotoUrl}?v=${Date.now()}` : "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"}
+                      src={getFileUrl(wm.profilePhotoUrl)}
                       alt={wm.name}
-                      className="w-16 h-16 rounded-xl object-cover bg-slate-100 ring-4 ring-white shadow-sm group-hover:scale-105 transition-all duration-300"
+                      className="w-16 h-16 rounded-xl object-cover bg-slate-100 ring-4 ring-white shadow-sm group-hover:scale-105 transition-all duration-300 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (wm.profilePhotoUrl) window.open(getFileUrl(wm.profilePhotoUrl), "_blank");
+                      }}
                       onError={(e) => {
                         e.target.src = "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg";
                       }}
@@ -177,15 +205,26 @@ const WishMasterList = () => {
                         ₹{wm.approvalStatus === "APPROVED" ? wm.approvedRate || wm.proposedRate : wm.proposedRate}
                       </span>
                     </div>
-                    <button
-                      onClick={() => handleViewPerformance(wm.id)}
-                      className="bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center gap-2 text-sm"
-                    >
-                      Details
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => handleDelete(e, wm.id)}
+                        className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white font-bold py-2 px-3 rounded-lg transition-all flex items-center gap-2 text-sm"
+                        title="Delete Wish Master"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleViewPerformance(wm.id); }}
+                        className="bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold py-2 px-4 rounded-lg transition-all flex items-center gap-2 text-sm"
+                      >
+                        Details
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

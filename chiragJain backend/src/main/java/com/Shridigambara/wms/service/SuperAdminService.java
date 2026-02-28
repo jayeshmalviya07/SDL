@@ -9,4 +9,6 @@ public interface SuperAdminService {
     SuperAdminResponseDto createSuperAdmin(SuperAdminRequestDto request);
 
     List<SuperAdminResponseDto> getAllSuperAdmins();
+
+    List<com.Shridigambara.wms.responsedto.InactiveEmployeeResponseDto> getInactiveEmployees();
 }

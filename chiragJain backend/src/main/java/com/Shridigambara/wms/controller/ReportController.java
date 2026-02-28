@@ -38,8 +38,11 @@ public class ReportController {
     }
 
     @GetMapping("/super-admin/hubs/{hubId}/wish-masters")
-    public ResponseEntity<List<WishMasterPerformanceSummaryDto>> getWishMastersByHub(@PathVariable Long hubId) {
-        return ResponseEntity.ok(reportService.getWishMastersByHub(hubId));
+    public ResponseEntity<List<WishMasterPerformanceSummaryDto>> getWishMastersByHub(
+            @PathVariable Long hubId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(reportService.getWishMastersByHub(hubId, startDate, endDate));
     }
 
     @GetMapping("/super-admin/wish-masters/{wishMasterId}/detailed")
@@ -52,16 +55,20 @@ public class ReportController {
 
     @GetMapping("/super-admin/wish-masters/search")
     public ResponseEntity<List<WishMasterPerformanceSummaryDto>> searchWishMasters(
-            @RequestParam String employeeId) {
-        return ResponseEntity.ok(reportService.searchWishMasters(employeeId));
+            @RequestParam String employeeId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(reportService.searchWishMasters(employeeId, startDate, endDate));
     }
 
     // ========== HUB ADMIN ENDPOINTS ==========
 
     @GetMapping("/hub-admin/wish-masters")
-    public ResponseEntity<List<WishMasterPerformanceSummaryDto>> getHubWishMasters() {
+    public ResponseEntity<List<WishMasterPerformanceSummaryDto>> getHubWishMasters(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         Long hubAdminId = getHubAdminIdFromContext();
-        return ResponseEntity.ok(reportService.getHubWishMasters(hubAdminId));
+        return ResponseEntity.ok(reportService.getHubWishMasters(hubAdminId, startDate, endDate));
     }
 
     @GetMapping("/hub-admin/wish-masters/{wishMasterId}/detailed")
@@ -70,7 +77,8 @@ public class ReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         Long hubAdminId = getHubAdminIdFromContext();
-        return ResponseEntity.ok(reportService.getHubWishMasterDetailedReport(hubAdminId, wishMasterId, startDate, endDate));
+        return ResponseEntity
+                .ok(reportService.getHubWishMasterDetailedReport(hubAdminId, wishMasterId, startDate, endDate));
     }
 
     @GetMapping("/hub-admin/wish-masters/search")
@@ -97,7 +105,7 @@ public class ReportController {
     }
 
     @GetMapping("/wish-master/day/{date}")
-    public ResponseEntity<DailyPerformanceDto> getMyDayPerformance(
+    public ResponseEntity<List<DailyPerformanceDto>> getMyDayPerformance(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         Long wishMasterId = getWishMasterIdFromContext();
         return ResponseEntity.ok(reportService.getMyDayPerformance(wishMasterId, date));

@@ -51,6 +51,9 @@ public class DeliveryPartner {
     @Builder.Default
     private java.util.List<WishMasterDocument> documents = new java.util.ArrayList<>();
 
+    @Builder.Default
+    private Boolean isActive = true;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

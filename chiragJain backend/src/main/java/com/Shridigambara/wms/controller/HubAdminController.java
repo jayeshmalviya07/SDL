@@ -38,4 +38,10 @@ public class HubAdminController {
     public ResponseEntity<List<HubAdminResponseDto>> getAll() {
         return ResponseEntity.ok(hubAdminService.getAllHubAdmins());
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        hubAdminService.deleteHubAdmin(id);
+        return ResponseEntity.noContent().build();
+    }
 }

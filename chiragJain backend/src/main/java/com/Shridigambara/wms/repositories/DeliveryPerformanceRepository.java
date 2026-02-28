@@ -10,23 +10,23 @@ import java.util.Optional;
 
 public interface DeliveryPerformanceRepository extends JpaRepository<DeliveryPerformance, Long> {
 
-    Optional<DeliveryPerformance> findByWishMaster_IdAndDeliveryDate(Long wishMasterId, LocalDate date);
+        List<DeliveryPerformance> findByWishMaster_IdAndDeliveryDate(Long wishMasterId, LocalDate date);
 
-    List<DeliveryPerformance> findByWishMaster_Id(Long wishMasterId);
+        List<DeliveryPerformance> findByWishMaster_Id(Long wishMasterId);
 
-    List<DeliveryPerformance> findByDeliveryDateBetween(LocalDate start, LocalDate end);
+        List<DeliveryPerformance> findByDeliveryDateBetween(LocalDate start, LocalDate end);
 
-    List<DeliveryPerformance> findByWishMaster_HubAdmin_Hub_IdAndDeliveryDateBetween(Long hubId, LocalDate start,
-            LocalDate end);
+        List<DeliveryPerformance> findByWishMaster_HubAdmin_Hub_IdAndDeliveryDateBetween(Long hubId, LocalDate start,
+                        LocalDate end);
 
-    List<DeliveryPerformance> findByWishMaster_HubAdmin_IdAndVerificationStatus(Long hubAdminId,
-            VerificationStatus status);
+        List<DeliveryPerformance> findByWishMaster_HubAdmin_IdAndVerificationStatus(Long hubAdminId,
+                        VerificationStatus status);
 
-    List<DeliveryPerformance> findByWishMaster_HubAdmin_Hub_IdAndVerificationStatus(Long hubId,
-            VerificationStatus status);
+        List<DeliveryPerformance> findByWishMaster_HubAdmin_Hub_IdAndVerificationStatus(Long hubId,
+                        VerificationStatus status);
 
-    List<DeliveryPerformance> findByWishMaster_HubAdmin_IdAndDeliveryDateBetween(Long hubAdminId, LocalDate start,
-            LocalDate end);
+        List<DeliveryPerformance> findByWishMaster_HubAdmin_IdAndDeliveryDateBetween(Long hubAdminId, LocalDate start,
+                        LocalDate end);
 
-    void deleteByWishMaster_IdAndDeliveryDateBetween(Long wishMasterId, LocalDate start, LocalDate end);
+        void deleteByWishMaster_IdAndDeliveryDateBetween(Long wishMasterId, LocalDate start, LocalDate end);
 }
